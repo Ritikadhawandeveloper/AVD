@@ -1,0 +1,88 @@
+AVD Definition
+Azure Virtual Desktop is a desktop & application virtualization service which runs on Azure.
+
+AVD Function
+• Full Windows experience - AVD delivers a full Windows experience with Windows 11 or Windows Server.
+
+• Single to Multi-Session Compatibility: You can assign a machine to single users by using single session or use multi-session for scalability.
+
+• RemoteApp: Offer full desktop or use RemoteApp to deliver individual apps.
+
+• Scalability: Scalable and flexible environments could be created.
+
+
+
+Subscription and Tenant
+
+Q: What is subscription?
+
+• A subscription is an agreement with Microsoft to use one or more Microsoft cloud platforms or services, for which charges accrue based on either a per-user license fee or on cloud-based resource consumption.
+
+• Microsoft's Software as a Service (SaaS)-based cloud offerings (MS365 and Dynamics 365) charge per user license fees.
+
+• Microsoft's Platform as a Service (PaaS) and Infrastructure as a Service (IaaS) cloud offerings (Azure) charge based on cloud resource consumption.
+
+What is a tenant?
+
+• A tenant represents an organization in Azure AD.
+
+• It is a dedicated Azure AD service instance that an organization receives and owns when it signs up for Microsoft Cloud services such as MS Intune, Microsoft Azure, D365, M365 etc.
+
+• Each Active Directory tenant is different than the other tenant.
+
+Requirement for Tenant Setup
+
+• An Azure subscription on an active account.
+
+• Azure Active Directory Tenant ID.
+
+• Global administrator account within the Azure AD tenant.
+
+Hostpool and Bastion
+
+Hostpool: A hostpool is a collection of one or more identical virtual machines (session hosts) that delivers desktop and apps.
+
+What is Bastion? 
+
+Azure Bastion lets you connect to your virtual machine by using browser to seamless RDP to SSH without any need to expose them through public IP address.
+
+
+Hybrid AVD Joined Deployment Steps
+
+1. Create a resource group.
+
+2. Under the resource group create a VNet.
+
+3. Create a NAT Gateway with the Public IP and associate it with a VNet.
+
+4. Create a standalone virtual machine using Windows Server operating system.
+
+5. Start the standalone VM and connect to it.
+
+6. Add ADDS role and promote it to DC.
+
+7. Install Microsoft Entra Connect.
+
+  • Installation to configuration.
+
+  • Click Agree.
+
+  • Set Express settings (use Express settings).
+
+  • Connect to Microsoft Entra ID.
+
+  • Username/Password of global admin.
+
+  • Connect to ADS using Active Directory user account who is a member of domain admin & Enterprise admin.
+
+  • Next -> Continue.
+
+8. Create a hostpool.
+
+9. Create a workspace.
+
+10. Create VM using AD credentials.
+
+11. Create users (AAD) once they are synced, assign RBAC roles (Desktop Virtualization User, Virtual Machine User Login).
+
+12. Assign users to application assignment.
