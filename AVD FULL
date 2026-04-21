@@ -1,0 +1,284 @@
+Deployment Steps [Microsoft Entra Joined]
+
+Create a Resource Group
+
+Under a Resource Group create a Virtual Network (VNet). After creating VNet we have to create NAT Gateway and associate it with the subnet.
+
+Create a Host Pool
+
+Create a Workspace
+
+Create Virtual Machine
+
+Create Users
+
+Assign User to the application assignment
+
+Assign Roles to user
+
+a. Desktop Virtualization user
+
+b. Virtual machine user login (RBAC Roles)
+
+RBAC roles
+
+Azure role-based access control (Azure RBAC) helps you manage who has access to Azure resources, what they can do with those resources, and what areas they have access to.
+
+Azure RBAC is an authorization system built on Azure Resource Manager that provides fine-grained access management to Azure resources.
+
+1. Desktop Virtualization User Role
+
+The Desktop Virtualization User role allows a user to access and use virtual desktops and applications in Azure Virtual Desktop.
+
+2. Virtual Machine User Login Role
+
+The Virtual Machine User Login role allows a user to log in to an Azure Virtual Machine using Remote Desktop (RDP) or SSH.
+
+Why is Azure RBAC data global?
+
+
+Azure RBAC data is global to ensure that customers can timely access resources regardless from where they're accessing. Azure RBAC is enforced by Azure Resource Manager, which has a global endpoint and requests are routed to the nearest region for speed and resilience
+
+
+Role Assigment 
+
+Role assignments
+
+A role assignment is the process of attaching a role definition to a user, group, service principal, or managed identity at a particular scope for the purpose of granting access. Access is granted by creating a role assignment, and access is revoked by removing a role assignment.
+
+
+AVD Listener
+
+SXS Stack Listener: The SxS (Side-by-Side) Stack Listener is a modern RDP listener component used in Azure Virtual Desktop session hosts that enables secure communication between users and virtual machines using the AVD service architecture.
+
+Must be up and running all the time to establish connection.
+
+Command: qwinsta
+
+There are two types of AVD deployment (domain joined):
+
+i) Microsoft Entra
+
+ii) Hybrid Active Directory
+
+Each host pool consists of one or more session hosts.
+
+HoST POOL
+
+Host pools
+
+A host pool is a collection of Azure virtual machines that are registered to Azure Virtual Desktop as session hosts. All session host virtual machines in a host pool should be sourced from the same image for a consistent user experience. You control the resources published to users through application groups.
+
+A host pool can be one of two types:
+
+Personal, where each session host is assigned to an individual user. Personal host pools provide dedicated desktops to end-users that optimize environments for performance and data separation.
+
+Pooled, where user sessions can be load balanced to any session host in the host pool. There can be multiple different users on a single session host at the same time. Pooled host pools provide a shared remote experience to end-users, which ensures lower costs and greater efficiency.
+
+Application Group
+
+An application group is a logical grouping of applications that are available on session hosts in a host pool.Application groups control whether a full desktop or which applications from a host pool are available to users to connect to. An application group can only be assigned to a single host pool, but you can assign multiple application groups to the same host pool. 
+
+There are two types of Application groups:
+
+Desktop Application Group: Users access the full Windows desktop from a session host. Available with pooled or personal host pools.
+
+RemoteApp Application Group: Users access individual applications you select and publish to the application group. Available with pooled host pools only.
+
+Workspace
+
+A workspace is a logical grouping of application groups. Each application group must be associated with a workspace for users to see the desktops and applications published to them.
+
+An application group can only be assigned to a single workspace.
+
+AVD Agents
+
+AVD agent acts as the intermediate communicator between the AVD service and virtual machine.
+
+Types of AVD Agents
+
+i) RD Agent Boot Loader: The agent boot loader is the executable that loads the agent.
+
+Functions:
+Installs and initializes the RDAgent
+Handles updates of the agent
+Ensures agent runs correctly during system startup
+Key Point:
+Acts like a supporting service for the main agent.
+
+ii) RD Services SXS Network Stack: It is responsible for maintaining [text illegible] and gateway listeners for incoming connection requests.
+
+Traditional Remote Desktop connections required inbound access (port 3389) to the virtual machine, which posed security risks.
+To solve this, Azure Virtual Desktop introduced the SxS network stack, where:
+The session host initiates an outbound connection to Azure
+Communication happens over secure HTTPS (port 443)
+No direct inbound RDP access is required
+The SxS Network Stack Agent plays a key role in enabling this mechanism.
+
+iii) RD Services Infrastructure Agents: It is responsible for checking communication between AVD service (gateway/broker) to VM.
+
+Functions:
+Maintains connectivity with Azure
+Supports reverse connect (SxS stack)
+Handles session communication
+Key Point:
+Works in the background to ensure stable connectivity.
+
+ 
+iv) RD Services Infrastructure Geneva agent: It is responsible for monitoring the health of agents.
+
+When users connect to Azure Virtual Desktop, many processes happen in the background (authentication, brokering, session creation, etc.).
+The Geneva Agent continuously:
+Monitors these processes
+Collects logs and metrics
+Sends data to Azure monitoring systems
+This helps in detecting issues, troubleshooting errors, and improving service reliability.
+
+Note: AVD uses TLS version 1.2 for connection.
+
+
+Stack heartbeats: Sends heartbeats every one second.
+
+Agent heartbeats: Sends heartbeats every 30 s.
+
+If the RD Broker misses the heartbeat it recognizes that the session is unhealthy & stops sending data to the client.
+
+Missing 8 heartbeats will trigger the warning state (session is unhealthy).
+
+RDS CALs are required for RDS licensing on AVD with server (Windows servers).
+
+Microsoft license (E3, E5) is sufficient for AVD running client OS.
+
+
+Start VM on connect
+
+It lets you reduce costs by enabling users to turn on their session hosts (VMs) only when they need them.
+
+Setup "Start VM on connect"
+
+Start VM on connect can be set up for both personal & pooled sessions.
+
+A role is needed for this [Desktop Virtualization Power On Contributor].
+
+This role is assigned on the subscription (host pool).
+
+This could be setup from Azure portal and Powershell/CLI.
+
+
+To add an existing standalone VM to an existing host pool:
+
+Connect to the VM.
+
+Navigate to control panel.
+
+Check for old agents & uninstall them.
+
+RDservices  Bootloader,Rd services SXS network stack , RD services Infrastructure agent , Rd services infrastructure geneva agent
+
+Download the AVD agent from the MS public article.
+
+Install the AVD agent bootloader followed by RD agent installer. When installing the RD agent, a registration key will be needed to register it to the host pool.
+
+The registration key can be found on the host pool.
+
+After successful installation of the agents, the VM should be added to the host pool.
+
+
+What parameters are checked for health of a VM now
+
+Domain joined check
+
+Domain Trust check
+
+SxS Stack Listener check
+
+Monitoring agent check
+
+Metadata check
+
+App attach health check
+
+URI accessible check
+
+The agents will be already there if the machine is already created from a gallery.
+
+
+Reverse Connect
+
+AVD is using reverse connect transport for establishing connection. Session host connects to AVD service to receive incoming RDP connection. It uses outbound connectivity for RDP traffic. Unlike the premises rendered desktop service deployment, reverse connect transport doesn't use a TCP listener to receive incoming RDP connection. It uses HTTPS connection.
+
+In contrast, reverse connect (modern AVD method) is a more secure approach where the session host itself initiates an outbound connection to Azure over HTTPS (port 443), and the user connects through Azure’s managed services instead of directly to the VM. This eliminates the need to expose the VM to the internet, reduces security risks, and simplifies network configuration. As a result, reverse connect is the preferred method in Azure Virtual Desktop due to its enhanced security, reliability, and cloud-native design.
+
+Forward Connect
+
+As it requires an inbound 3389 port to be opened on the RD tenant (endpoint)(Session host).
+
+Session host receives an incoming request over the RDP port (3389).
+
+the user’s device directly initiates a connection to the session host using Remote Desktop Protocol (RDP), typically over port 3389, which requires the virtual machine to have a public IP address or VPN access and an open inbound port—making it less secure and more complex to manage.
+
+
+Difference between AVD and RDS
+
+RDS	AVD
+Session-based on virtualization-based deployment	
+Session collection	
+Published RemoteApps	
+Published desktop
+Session host role can be installed only on servers	
+
+rds
+
+Tenant-based deployment
+Host-pool
+	Desktop application group
+Remote application group
+Session host can be installed in clients (single session, multi-session), servers.
+
+Key points (AVD)
+
+Image Composition: 
+
+SAC releases only (Semi-Annual Channel) 
+
+
+Windows defender optimized for multisession mode
+
+No Server Manager (instead client OS is used)
+
+Windows Defender optimized for multi-session mode.
+
+No support for single box deployment.
+
+Inbound RDP port not required
+
+Paths:
+
+(Portal)-> Hostpool -> settings -> RDP properties -> Advanced
+
+Hostpool -> Networking -> RDP shortpath -> [text illegible] RDP shortpath to configure
+
+Hostpool -> autoscale
+
+Load Balancing Types:
+
+i) Breadth-first: Aims to evenly distribute new user sessions across session hosts in a host pool. You don't have to specify a maximum session limit for the number of sessions.
+
+ii) Depth-first: Keeps starting new user sessions on one session host until the maximum session limit is reached.
+
+Note:
+
+Create a Resource
+
+Go to marketplace
+
+Scaling plan (validate AVD Resource)
+
+Create the scaling plan
+
+Go to basic, and add all the required settings
+
+select the type of autoscaling
+
+Schedule the autoscale 
+
